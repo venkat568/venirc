@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata: 
+  name: javawebapprs
+  labels:
+    app: javawebapp
+spec:
+  replicas: 4
+  selector:
+    matchLabels:  # matchLabel will be extra on replicaset
+      app: javawebapp
+  template:
+    metadata: 
+      name: javawebapprspod
+      labels:
+        app: javawebapp
+    spec: 
+      containers:
+      - name: javawebapprscontainer
+        image: dockerhandson/java-web-app
+        ports:
+        - containerPort: 8080
+
+---
+apiVersion: v1
+kind: Service
+metadata: 
+  name: javawebapprsservice
+spec:
+  selector: 
+    app: javawebapp
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 8080
+    nodePort: 30100
+                    
