@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hpadeployment
+  labels:
+    name: hpadeploy
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      name: hpadeploy
+  template:
+    metadata:
+      name: hpadeploymentpod
+      labels:
+        name: hpadeploy
+    spec:
+      containers:
+      - name: hpadeploymentcontainer
+        image: k8s.gcr.io/hpa-example
+        ports:
+        - name: http
+          containerPort: 80
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "64Mi"
+          limits:
+            cpu: "100m"
+            memory: "256Mi"
+
+## hpa service 
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hpaservice
+spec:
+  selector:
+    name: hpadeploy
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 32108
+  type: NodePort
+
+## auto scaling code for K8's deployment
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpadeploymentautoscaler
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: hpadeployment
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 50
+
